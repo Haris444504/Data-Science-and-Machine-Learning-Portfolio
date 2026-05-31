@@ -1,4 +1,4 @@
-# 🛒 Ecommerce Predictive Analytics
+# 🛒 Ecommerce Predictive Analytics Projects 
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-2.x-150458?logo=pandas&logoColor=white)
