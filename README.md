@@ -265,7 +265,7 @@ python Insurance_Charges_Predictions.py
 ## 📁 Repository Structure
 
 ```
-Data_Science____Machine_Learning_Projects/
+Data-Science-and-Machine-Learning-Portfolio/
 │
 ├── eCommerce_Data_Analysis.py          # Retail EDA & Business Intelligence
 ├── IT_COMPANY_DATA.PY                  # Workforce analytics + smart imputation
@@ -287,7 +287,7 @@ Data_Science____Machine_Learning_Projects/
 BS Computer Science — University of Management and Technology (UMT), Lahore
 Founder, FLozenAI | AI Automation & Education
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/your-profile)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/haris-saddique-049189357/)
 [![GitHub](https://img.shields.io/badge/GitHub-Haris444504-black?logo=github)](https://github.com/Haris444504)
 
 ---
