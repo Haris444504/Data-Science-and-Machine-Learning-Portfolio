@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 
 # loading data
-data = pd.read_excel(r"C:\Users\Haris_hp\Downloads\Data_Set_one.xlsx")
+data = pd.read_excel(r"[your path]")
 print("---------------------------------Original data : -----------------------------")
 print("\n")
 print(data)
@@ -50,13 +50,13 @@ print(sh.analyze(data))
 
 # 📅 Datetime Columns: ['Date']
 
-# for col in Categorical_Columns:
-#     sns.barplot(x=col, y="TotalPrice", data=data)
-#     plt.show()
+for col in Categorical_Columns:
+    sns.barplot(x=col, y="TotalPrice", data=data)
+    plt.show()
 
-# for colms in numerical_columns:
-#     sns.scatterplot(x=colms, y="TotalPrice", data=data)
-#     plt.show()
+for colms in numerical_columns:
+    sns.scatterplot(x=colms, y="TotalPrice", data=data)
+    plt.show()
 
 new_columns = ["Date", "CustomerID", "ShippingAddress", "TrackingNumber", "OrderID"]
 
