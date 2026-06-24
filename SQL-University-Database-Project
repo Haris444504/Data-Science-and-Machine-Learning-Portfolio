@@ -1,0 +1,192 @@
+# University Management System Database (SQL)
+
+## Overview
+
+The **University Management System Database** is a relational database project developed using SQL to simulate the core operations of a university environment. The system manages information related to students, teachers, departments, courses, enrollments, and attendance records.
+
+This project demonstrates practical database design concepts, including table relationships, data integrity, normalization, joins, aggregate functions, subqueries, and views.
+
+---
+
+## Features
+
+* Department Management
+* Student Records Management
+* Teacher Records Management
+* Course Management
+* Student Course Enrollment
+* Attendance Tracking
+* Department-wise Student Analysis
+* Academic Performance Tracking
+* SQL Views for Reporting
+* Advanced Queries using Joins and Subqueries
+
+---
+
+## Database Schema
+
+### Tables
+
+| Table Name      | Description                        |
+| --------------- | ---------------------------------- |
+| University_Info | Stores university information      |
+| Department      | Stores department details          |
+| Student         | Stores student records             |
+| Teacher         | Stores teacher records             |
+| Courses         | Stores course information          |
+| Enrollment      | Manages student-course enrollments |
+| Attendance      | Tracks student attendance          |
+
+---
+
+## Relationships
+
+* One Department can have many Students.
+* One Department can have many Teachers.
+* One Department can offer multiple Courses.
+* One Student can enroll in multiple Courses.
+* One Course can have multiple Students.
+* Attendance records are maintained for each Student-Course combination.
+
+---
+
+## Technologies Used
+
+* SQL
+* MySQL
+
+---
+
+## Implemented SQL Concepts
+
+### Database Operations
+
+* CREATE DATABASE
+* CREATE TABLE
+* INSERT INTO
+* SELECT
+
+### Constraints
+
+* PRIMARY KEY
+* FOREIGN KEY
+* UNIQUE
+* NOT NULL
+
+### Query Operations
+
+* Filtering Records (`WHERE`)
+* Sorting Records (`ORDER BY`)
+* Aggregate Functions (`COUNT`, `AVG`, `MAX`)
+* Grouping (`GROUP BY`)
+* Joins (`INNER JOIN`, `LEFT JOIN`)
+* Subqueries
+* Views
+
+---
+
+## Sample Queries
+
+### Students with CGPA Greater Than 3.5
+
+```sql
+SELECT *
+FROM Student
+WHERE student_cgpa > 3.5;
+```
+
+### Department-wise Student Count
+
+```sql
+SELECT dep_Name, COUNT(*)
+FROM Student
+JOIN Department
+ON Student.dep_ID = Department.dep_ID
+GROUP BY dep_Name;
+```
+
+### Students Above Average CGPA
+
+```sql
+SELECT *
+FROM Student
+WHERE student_cgpa >
+(
+    SELECT AVG(student_cgpa)
+    FROM Student
+);
+```
+
+### Highest CGPA Student
+
+```sql
+SELECT *
+FROM Student
+ORDER BY student_cgpa DESC
+LIMIT 1;
+```
+
+---
+
+## View Implementation
+
+### Student Report View
+
+```sql
+CREATE VIEW Student_Report AS
+SELECT s.student_id,
+       s.student_name,
+       d.dep_Name,
+       s.student_cgpa
+FROM Student s
+JOIN Department d
+ON s.dep_ID = d.dep_ID;
+```
+
+This view provides a simplified report containing student details along with their department information.
+
+---
+
+## Learning Outcomes
+
+Through this project, I gained practical experience in:
+
+* Relational Database Design
+* Entity Relationships
+* Database Normalization Principles
+* SQL Query Optimization Basics
+* Data Retrieval and Analysis
+* Building Real-World Database Systems
+
+---
+
+## Future Enhancements
+
+* Stored Procedures
+* Triggers
+* User Authentication System
+* Role-Based Access Control
+* Fee Management Module
+* Examination Management Module
+* Library Management Integration
+* Dashboard and Reporting System
+
+---
+
+## Author
+
+**Haris Saddique**
+
+Aspiring Data Scientist & Machine Learning Engineer
+
+Currently focused on building strong foundations in:
+
+* SQL
+* Python
+* Data Science
+* Machine Learning
+* Database Systems
+
+---
+
+⭐ If you found this project useful, consider giving it a star on GitHub.
