@@ -1,192 +1,190 @@
-# University Management System Database (SQL)
+# 🎓 University System — SQL Project
 
-## Overview
-
-The **University Management System Database** is a relational database project developed using SQL to simulate the core operations of a university environment. The system manages information related to students, teachers, departments, courses, enrollments, and attendance records.
-
-This project demonstrates practical database design concepts, including table relationships, data integrity, normalization, joins, aggregate functions, subqueries, and views.
+A beginner-to-intermediate SQL project that models a university database from scratch.  
+Built as part of my **Data Science & Machine Learning journey** to strengthen my SQL foundations.
 
 ---
 
-## Features
+## 📌 About This Project
 
-* Department Management
-* Student Records Management
-* Teacher Records Management
-* Course Management
-* Student Course Enrollment
-* Attendance Tracking
-* Department-wise Student Analysis
-* Academic Performance Tracking
-* SQL Views for Reporting
-* Advanced Queries using Joins and Subqueries
+This project designs and queries a relational database for a university system. It covers everything from schema design and data insertion to joins, subqueries, views, and aggregate functions — all written in **MySQL**.
 
 ---
 
-## Database Schema
+## 🗂️ Database Schema
 
-### Tables
+The database `University_System` contains **6 tables**:
 
-| Table Name      | Description                        |
-| --------------- | ---------------------------------- |
-| University_Info | Stores university information      |
-| Department      | Stores department details          |
-| Student         | Stores student records             |
-| Teacher         | Stores teacher records             |
-| Courses         | Stores course information          |
-| Enrollment      | Manages student-course enrollments |
-| Attendance      | Tracks student attendance          |
+| Table | Description |
+|---|---|
+| `Department` | University departments (CS, SE, IT, etc.) |
+| `Student` | Student records with CGPA and semester info |
+| `Teacher` | Teacher records with specialization |
+| `Courses` | Courses offered by each department |
+| `Enrollment` | Student–course enrollment with grades |
+| `Attendance` | Daily attendance records per student per course |
 
----
+### Entity Relationships
 
-## Relationships
+```
+Department
+   ├── Student        (dep_ID → dep_ID)
+   ├── Teacher        (dep_ID → dep_ID)
+   └── Courses        (dep_ID → dep_ID)
+          ├── Enrollment  (course_ID → course_ID)
+          └── Attendance  (course_ID → course_ID)
 
-* One Department can have many Students.
-* One Department can have many Teachers.
-* One Department can offer multiple Courses.
-* One Student can enroll in multiple Courses.
-* One Course can have multiple Students.
-* Attendance records are maintained for each Student-Course combination.
-
----
-
-## Technologies Used
-
-* SQL
-* MySQL
-
----
-
-## Implemented SQL Concepts
-
-### Database Operations
-
-* CREATE DATABASE
-* CREATE TABLE
-* INSERT INTO
-* SELECT
-
-### Constraints
-
-* PRIMARY KEY
-* FOREIGN KEY
-* UNIQUE
-* NOT NULL
-
-### Query Operations
-
-* Filtering Records (`WHERE`)
-* Sorting Records (`ORDER BY`)
-* Aggregate Functions (`COUNT`, `AVG`, `MAX`)
-* Grouping (`GROUP BY`)
-* Joins (`INNER JOIN`, `LEFT JOIN`)
-* Subqueries
-* Views
-
----
-
-## Sample Queries
-
-### Students with CGPA Greater Than 3.5
-
-```sql
-SELECT *
-FROM Student
-WHERE student_cgpa > 3.5;
+Student
+   ├── Enrollment  (student_id → student_id)
+   └── Attendance  (student_id → student_id)
 ```
 
-### Department-wise Student Count
+---
 
+## 🧱 Tables & Sample Data
+
+### Department
 ```sql
+(1, 'Computer Science'), (2, 'Software Engineering'),
+(3, 'Information Technology'), (4, 'Cyber Security'),
+(5, 'Artificial Intelligence')
+```
+
+### Student
+5 students across CS, SE, and IT — with semester (3–5) and CGPA (3.0–3.8).
+
+### Teacher
+5 teachers with specializations in Database Systems, Networks, and Cyber Security.
+
+### Courses
+6 courses (Database Systems, Data Structures, Networks, Software Engineering, Web Dev, Cyber Security).
+
+### Enrollment
+9 enrollment records linking students to courses with letter grades (A, A-, B+, B).
+
+### Attendance
+9 attendance records for June 1, 2026 with Present/Absent status.
+
+---
+
+## 🔍 SQL Concepts Covered
+
+### ✅ Basic Filtering & Sorting
+```sql
+-- Students with CGPA above 3.5
+SELECT * FROM Student WHERE student_cgpa > 3.5;
+
+-- Teachers who specialize in Networks
+SELECT * FROM Teacher WHERE specialization = 'Networks';
+
+-- Students sorted by CGPA (highest first)
+SELECT * FROM Student ORDER BY student_cgpa DESC;
+```
+
+### ✅ Aggregate Functions
+```sql
+SELECT COUNT(*)           FROM Student;   -- Total students
+SELECT AVG(student_cgpa)  FROM Student;   -- Average CGPA
+SELECT MAX(student_cgpa)  FROM Student;   -- Highest CGPA
+```
+
+### ✅ JOINs
+```sql
+-- Teachers with their department names
+SELECT teacher_name, dep_Name
+FROM Department
+LEFT JOIN Teacher ON Department.dep_ID = Teacher.dep_ID;
+
+-- Students with enrolled courses and grades
+SELECT student_name, course_name, grade
+FROM Student
+LEFT JOIN Enrollment ON Student.student_id = Enrollment.student_id
+JOIN Courses ON Enrollment.course_ID = Courses.course_ID;
+
+-- Student count per department
 SELECT dep_Name, COUNT(*)
 FROM Student
-JOIN Department
-ON Student.dep_ID = Department.dep_ID
+JOIN Department ON Student.dep_ID = Department.dep_ID
 GROUP BY dep_Name;
 ```
 
-### Students Above Average CGPA
-
+### ✅ Subqueries
 ```sql
-SELECT *
-FROM Student
-WHERE student_cgpa >
-(
-    SELECT AVG(student_cgpa)
-    FROM Student
-);
+-- Students with above-average CGPA
+SELECT * FROM Student
+WHERE student_cgpa > (SELECT AVG(student_cgpa) FROM Student);
+
+-- Student with the highest CGPA
+SELECT * FROM Student
+WHERE student_cgpa = (SELECT MAX(student_cgpa) FROM Student);
 ```
 
-### Highest CGPA Student
-
+### ✅ Views
 ```sql
-SELECT *
-FROM Student
-ORDER BY student_cgpa DESC
-LIMIT 1;
-```
-
----
-
-## View Implementation
-
-### Student Report View
-
-```sql
+-- Reusable student report view
 CREATE VIEW Student_Report AS
-SELECT s.student_id,
-       s.student_name,
-       d.dep_Name,
-       s.student_cgpa
+SELECT s.student_id, s.student_name, d.dep_Name, s.student_cgpa
 FROM Student s
-JOIN Department d
-ON s.dep_ID = d.dep_ID;
+JOIN Department d ON s.dep_ID = d.dep_ID;
+
+SELECT * FROM Student_Report;
 ```
 
-This view provides a simplified report containing student details along with their department information.
+### ✅ LIMIT
+```sql
+-- Top student by CGPA
+SELECT * FROM Student ORDER BY student_cgpa DESC LIMIT 1;
+```
 
 ---
 
-## Learning Outcomes
+## 🚀 How to Run
 
-Through this project, I gained practical experience in:
-
-* Relational Database Design
-* Entity Relationships
-* Database Normalization Principles
-* SQL Query Optimization Basics
-* Data Retrieval and Analysis
-* Building Real-World Database Systems
-
----
-
-## Future Enhancements
-
-* Stored Procedures
-* Triggers
-* User Authentication System
-* Role-Based Access Control
-* Fee Management Module
-* Examination Management Module
-* Library Management Integration
-* Dashboard and Reporting System
+1. Open **MySQL Workbench** or any MySQL client.
+2. Run the full script in order:
+   - Create database & tables
+   - Insert sample data
+   - Execute queries
+3. Or import the `.sql` file directly:
+   ```bash
+   mysql -u root -p < university_system.sql
+   ```
 
 ---
 
-## Author
+## 🛠️ Tech Stack
 
-**Haris Saddique**
-
-Aspiring Data Scientist & Machine Learning Engineer
-
-Currently focused on building strong foundations in:
-
-* SQL
-* Python
-* Data Science
-* Machine Learning
-* Database Systems
+- **Database:** MySQL
+- **Tool:** MySQL Workbench
 
 ---
 
-⭐ If you found this project useful, consider giving it a star on GitHub.
+## 📈 Part of My Journey
+
+This project is a checkpoint in my **Data Science & Machine Learning roadmap**.  
+SQL is a core skill for any data professional — from querying raw data to building pipelines for ML models.
+
+**Topics I've now covered in SQL:**
+- Schema design & normalization
+- CRUD operations
+- Filtering, sorting, grouping
+- Aggregate functions
+- INNER / LEFT JOINs
+- Subqueries
+- Views
+- LIMIT & ORDER BY
+
+> *More projects coming as I progress through Data Science, Python, and ML. Stay tuned!*
+
+---
+
+## 🤝 Connect With Me
+
+If you're also on a data journey, let's connect!  
+Feel free to fork this repo, suggest improvements, or just drop a ⭐ if it helped you.
+
+---
+
+## 📄 License
+
+This project is open-source and free to use for learning purposes.
