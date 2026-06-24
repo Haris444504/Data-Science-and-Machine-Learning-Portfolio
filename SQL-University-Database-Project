@@ -1,190 +1,211 @@
-# 🎓 University System — SQL Project
+Create database University_System;
+use University_System ;
 
-A beginner-to-intermediate SQL project that models a university database from scratch.  
-Built as part of my **Data Science & Machine Learning journey** to strengthen my SQL foundations.
+Create table University_info(
+	university_mail varchar(50) unique,
+    university_Id int primary key ,
+    university_name varchar(50) not null unique 
+);
+CREATE TABLE Department(
+    dep_ID INT PRIMARY KEY ,
+    dep_Name VARCHAR(50) NOT NULL
+);
 
----
+INSERT INTO Department(dep_ID, dep_Name)
+VALUES
+(1,'Computer Science'),
+(2,'Software Engineering'),
+(3,'Information Technology'),
+(4,'Cyber Security'),
+(5,'Artificial Intelligance');
 
-## 📌 About This Project
+SELECT * FROM Department;
 
-This project designs and queries a relational database for a university system. It covers everything from schema design and data insertion to joins, subqueries, views, and aggregate functions — all written in **MySQL**.
+-- Student Table
 
----
+CREATE TABLE Student(
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(50) NOT NULL,
+    student_email VARCHAR(50) UNIQUE,
+    semester INT,
+    student_cgpa FLOAT,
+    dep_ID INT,
+    FOREIGN KEY (dep_ID) REFERENCES Department(dep_ID)
+);
 
-## 🗂️ Database Schema
+INSERT INTO Student
+(student_id, student_name, student_email, semester, student_cgpa, dep_ID)
+VALUES
+(1,'Ali Khan','ali@gmail.com',4,3.5,1),
+(2,'Ahmed Raza','ahmed@gmail.com',5,3.7,2),
+(3,'Hamza Ali','hamza@gmail.com',5,3.2,1),
+(4,'Bilal Ahmed','bilal@gmail.com',3,3.0,3),
+(5,'Usman Khan','usman@gmail.com',4,3.8,2);
 
-The database `University_System` contains **6 tables**:
+SELECT * FROM Student;
 
-| Table | Description |
-|---|---|
-| `Department` | University departments (CS, SE, IT, etc.) |
-| `Student` | Student records with CGPA and semester info |
-| `Teacher` | Teacher records with specialization |
-| `Courses` | Courses offered by each department |
-| `Enrollment` | Student–course enrollment with grades |
-| `Attendance` | Daily attendance records per student per course |
+-- Teacher Table
 
-### Entity Relationships
+CREATE TABLE Teacher(
+    teacher_id INT PRIMARY KEY,
+    teacher_name VARCHAR(50) NOT NULL,
+    teacher_email VARCHAR(50) UNIQUE,
+    specialization VARCHAR(50),
+    dep_ID INT,
+    FOREIGN KEY (dep_ID) REFERENCES Department(dep_ID)
+);
 
-```
-Department
-   ├── Student        (dep_ID → dep_ID)
-   ├── Teacher        (dep_ID → dep_ID)
-   └── Courses        (dep_ID → dep_ID)
-          ├── Enrollment  (course_ID → course_ID)
-          └── Attendance  (course_ID → course_ID)
+INSERT INTO Teacher
+(teacher_id, teacher_name, teacher_email, specialization, dep_ID)
+VALUES
+(1,'Dr. Usman','usman@umt.edu.pk','Database Systems',1),
+(2,'Dr. Hassan','hassan@umt.edu.pk','Networks',2),
+(3,'Dr. Ahmed','ahmed@umt.edu.pk','Cyber Security',3),
+(4,'Dr. Ahsan','Ahsan@umt.edu.pk','Networks',3),
+(5,'Dr. Ali','Ali@umt.edu.pk','Cyber Security',4);
 
-Student
-   ├── Enrollment  (student_id → student_id)
-   └── Attendance  (student_id → student_id)
-```
+SELECT * FROM Teacher;
 
----
+-- Courses Table
 
-## 🧱 Tables & Sample Data
+CREATE TABLE Courses(
+    course_ID INT PRIMARY KEY,
+    course_name VARCHAR(50) NOT NULL,
+    credit_hours INT NOT NULL,
+    dep_ID INT,
+    FOREIGN KEY (dep_ID) REFERENCES Department(dep_ID)
+);
 
-### Department
-```sql
-(1, 'Computer Science'), (2, 'Software Engineering'),
-(3, 'Information Technology'), (4, 'Cyber Security'),
-(5, 'Artificial Intelligence')
-```
+INSERT INTO Courses
+(course_ID, course_name, credit_hours, dep_ID)
+VALUES
+(101,'Database Systems',3,1),
+(102,'Data Structures',3,1),
+(103,'Computer Networks',3,1),
+(104,'Software Engineering',3,2),
+(105,'Web Development',3,2),
+(106,'Cyber Security',3,3);
 
-### Student
-5 students across CS, SE, and IT — with semester (3–5) and CGPA (3.0–3.8).
+SELECT * FROM Courses;
 
-### Teacher
-5 teachers with specializations in Database Systems, Networks, and Cyber Security.
+-- Enrollment Table
 
-### Courses
-6 courses (Database Systems, Data Structures, Networks, Software Engineering, Web Dev, Cyber Security).
+CREATE TABLE Enrollment(
+    Enroll_Id INT PRIMARY KEY,
+    student_id INT,
+    course_ID INT,
+    semester INT,
+    grade VARCHAR(2),
+    FOREIGN KEY (student_id) REFERENCES Student(student_id),
+    FOREIGN KEY (course_ID) REFERENCES Courses(course_ID)
+);
 
-### Enrollment
-9 enrollment records linking students to courses with letter grades (A, A-, B+, B).
+INSERT INTO Enrollment
+(Enroll_Id, student_id, course_ID, semester, grade)
+VALUES
+(1,1,101,4,'A'),
+(2,1,102,4,'B+'),
+(3,2,101,4,'A-'),
+(4,2,104,4,'B'),
+(5,3,103,5,'A'),
+(6,3,105,5,'A-'),
+(7,4,106,3,'B+'),
+(8,5,101,4,'A'),
+(9,5,103,4,'B');
 
-### Attendance
-9 attendance records for June 1, 2026 with Present/Absent status.
+SELECT * FROM Enrollment;
 
----
+-- Attendance Table
 
-## 🔍 SQL Concepts Covered
+CREATE TABLE Attendance(
+    attendance_id INT PRIMARY KEY,
+    student_id INT,
+    course_ID INT,
+    attendance_date DATE,
+    status ENUM('Present','Absent'),
+    FOREIGN KEY (student_id) REFERENCES Student(student_id),
+    FOREIGN KEY (course_ID) REFERENCES Courses(course_ID)
+);
 
-### ✅ Basic Filtering & Sorting
-```sql
--- Students with CGPA above 3.5
-SELECT * FROM Student WHERE student_cgpa > 3.5;
+INSERT INTO Attendance
+(attendance_id, student_id, course_ID, attendance_date, status)
+VALUES
+(1,1,101,'2026-06-01','Present'),
+(2,1,102,'2026-06-01','Absent'),
+(3,2,101,'2026-06-01','Present'),
+(4,2,104,'2026-06-01','Present'),
+(5,3,103,'2026-06-01','Absent'),
+(6,3,105,'2026-06-01','Present'),
+(7,4,106,'2026-06-01','Present'),
+(8,5,101,'2026-06-01','Present'),
+(9,5,103,'2026-06-01','Absent');
 
--- Teachers who specialize in Networks
-SELECT * FROM Teacher WHERE specialization = 'Networks';
+SELECT * FROM Attendance;
 
--- Students sorted by CGPA (highest first)
-SELECT * FROM Student ORDER BY student_cgpa DESC;
-```
+select* from Student where student_cgpa > 3.5 ; 
+select * from Student where semester = 4 ;
+select * from Teacher where specialization = 'Networks' ;
 
-### ✅ Aggregate Functions
-```sql
-SELECT COUNT(*)           FROM Student;   -- Total students
-SELECT AVG(student_cgpa)  FROM Student;   -- Average CGPA
-SELECT MAX(student_cgpa)  FROM Student;   -- Highest CGPA
-```
+select * from Student order by student_cgpa desc ; 
+select * from Courses order by course_name ; 
 
-### ✅ JOINs
-```sql
--- Teachers with their department names
-SELECT teacher_name, dep_Name
-FROM Department
-LEFT JOIN Teacher ON Department.dep_ID = Teacher.dep_ID;
+select count(*) from Student ;
+select avg(student_cgpa) from Student ; 
 
--- Students with enrolled courses and grades
-SELECT student_name, course_name, grade
+select max(student_cgpa) from Student; 
+
+select teacher_name, dep_Name 
+from Department
+Left Join Teacher 
+ON Department.dep_ID = teacher.dep_ID ; 
+
+select student_name , course_name , grade 
+from Student 
+Left Join Enrollment
+ON Student.student_id = Enrollment.student_id 
+JOin Courses 
+On Enrollment.course_ID = Courses.course_ID ; 
+
+select dep_Name , count(*) 
+from Student 
+JOIN Department 
+ON Student.dep_ID = Department.Dep_ID 
+group by dep_Name ;
+
+select * from Attendance 
+where status = 'Present';
+
+SELECT *
 FROM Student
-LEFT JOIN Enrollment ON Student.student_id = Enrollment.student_id
-JOIN Courses ON Enrollment.course_ID = Courses.course_ID;
+WHERE student_cgpa >
+(
+    SELECT AVG(student_cgpa)
+    FROM Student
+);
 
--- Student count per department
-SELECT dep_Name, COUNT(*)
+SELECT *
 FROM Student
-JOIN Department ON Student.dep_ID = Department.dep_ID
-GROUP BY dep_Name;
-```
+WHERE student_cgpa =
+(
+    SELECT MAX(student_cgpa)
+    FROM Student
+);
 
-### ✅ Subqueries
-```sql
--- Students with above-average CGPA
-SELECT * FROM Student
-WHERE student_cgpa > (SELECT AVG(student_cgpa) FROM Student);
-
--- Student with the highest CGPA
-SELECT * FROM Student
-WHERE student_cgpa = (SELECT MAX(student_cgpa) FROM Student);
-```
-
-### ✅ Views
-```sql
--- Reusable student report view
 CREATE VIEW Student_Report AS
-SELECT s.student_id, s.student_name, d.dep_Name, s.student_cgpa
+SELECT s.student_id,
+       s.student_name,
+       d.dep_Name,
+       s.student_cgpa
 FROM Student s
-JOIN Department d ON s.dep_ID = d.dep_ID;
+JOIN Department d
+ON s.dep_ID = d.dep_ID;
 
-SELECT * FROM Student_Report;
-```
+Select * from Student_Report ; 
 
-### ✅ LIMIT
-```sql
--- Top student by CGPA
-SELECT * FROM Student ORDER BY student_cgpa DESC LIMIT 1;
-```
+SELECT *
+FROM Student
+ORDER BY student_cgpa DESC
+LIMIT 1;
 
----
 
-## 🚀 How to Run
-
-1. Open **MySQL Workbench** or any MySQL client.
-2. Run the full script in order:
-   - Create database & tables
-   - Insert sample data
-   - Execute queries
-3. Or import the `.sql` file directly:
-   ```bash
-   mysql -u root -p < university_system.sql
-   ```
-
----
-
-## 🛠️ Tech Stack
-
-- **Database:** MySQL
-- **Tool:** MySQL Workbench
-
----
-
-## 📈 Part of My Journey
-
-This project is a checkpoint in my **Data Science & Machine Learning roadmap**.  
-SQL is a core skill for any data professional — from querying raw data to building pipelines for ML models.
-
-**Topics I've now covered in SQL:**
-- Schema design & normalization
-- CRUD operations
-- Filtering, sorting, grouping
-- Aggregate functions
-- INNER / LEFT JOINs
-- Subqueries
-- Views
-- LIMIT & ORDER BY
-
-> *More projects coming as I progress through Data Science, Python, and ML. Stay tuned!*
-
----
-
-## 🤝 Connect With Me
-
-If you're also on a data journey, let's connect!  
-Feel free to fork this repo, suggest improvements, or just drop a ⭐ if it helped you.
-
----
-
-## 📄 License
-
-This project is open-source and free to use for learning purposes.
+this is code and I need to tell my linkdenIn community to that along with my data scince and ML journey and say I have done Done SQL 
