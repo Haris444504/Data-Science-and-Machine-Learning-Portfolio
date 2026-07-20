@@ -1,117 +1,282 @@
-# FinPay Fraud Detection
+import joblib
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import xgboost as xgb
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
 
-A machine learning pipeline for detecting fraudulent financial transactions using engineered risk features and ensemble classifiers.
+from sklearn.svm import SVC
 
-## 📌 Overview
+import sheryanalysis as sh
 
-This project builds a binary classification model to flag fraudulent transactions (`is_fraud`) from the FinPay transaction dataset. It combines domain-driven feature engineering (spending pattern deviations, login/device risk signals, merchant risk) with model comparison and hyperparameter tuning to produce a deployable fraud-scoring model.
+# from sklearn.preprocessing import standardscaler
 
-## 📂 Dataset
+data = pd.read_excel(r"[Enter your path]")
+print(data.head())
+# print(data.info())
+# print(data.describe())
+# print(data.isnull().sum())
+print(data.shape)
+data["customer_credit_score"] = data["customer_credit_score"].fillna(
+    data["customer_credit_score"].mean()
+)
+print(data.isnull().sum())
+# print(sh.analyze(data))
+# -- data visualization --
 
-Source file: `FinPay_Fraud_Dataset.xlsx`
+# 🧱 Columns: ['transaction_id', 'customer_id', 'merchant_id', 'transaction_amount', 'transaction_time', 'payment_method', 'merchant_category', 'city', 'country', 'device_type', 'browser', 'account_age_days', 'previous_fraud_count', 'failed_login_attempts', 'daily_transaction_count', 'weekly_transaction_amount', 'avg_transaction_amount', 'merchant_risk_score', 'customer_credit_score', 'is_weekend', 'is_night', 'location_distance_km', 'vpn_used', 'new_device', 'new_location', 'chargeback_history', 'is_fraud']
 
-Key raw columns:
+# ✅ No null values found
 
-| Type | Columns |
-|---|---|
-| Numerical | `transaction_amount`, `account_age_days`, `weekly_transaction_amount`, `avg_transaction_amount`, `merchant_risk_score`, `customer_credit_score`, `location_distance_km` |
-| Categorical | `payment_method`, `merchant_category`, `city`, `country`, `device_type`, `browser`, `previous_fraud_count`, `failed_login_attempts`, `daily_transaction_count`, `is_weekend`, `is_night`, `vpn_used`, `new_device`, `new_location`, `chargeback_history` |
-| Datetime | `transaction_time` |
-| Identifiers (dropped before training) | `transaction_id`, `customer_id`, `merchant_id` |
-| Target | `is_fraud` |
+# 🔠 Categorical Columns: ['payment_method', 'merchant_category', 'city', 'country', 'device_type', 'browser', 'previous_fraud_count', 'failed_login_attempts', 'daily_transaction_count', 'is_weekend', 'is_night', 'vpn_used', 'new_device', 'new_location', 'chargeback_history', 'is_fraud']
 
-Missing values in `customer_credit_score` are imputed with the column mean; no other nulls were present.
+# 🔢 Numerical Columns: ['transaction_amount', 'account_age_days', 'weekly_transaction_amount', 'avg_transaction_amount', 'merchant_risk_score', 'customer_credit_score', 'location_distance_km']
 
-## 🛠️ Feature Engineering
+# 📅 Datetime Columns: ['transaction_time']
 
-Custom risk features derived from the raw columns:
+# 📝 Text Columns: ['transaction_id', 'customer_id', 'merchant_id']
 
-- **Spending deviation** — `Monthly_Transaction_Amount`, `Monthly_Transaction_Amount_average`, and their ratio `Amount_Derivation`, flagged as `Highest_Red_Flag` when spending spikes well above average.
-- **Behavioral risk scores** — `Risk_Score` (prior fraud × failed logins), `Location_Risk` (prior fraud + distance from usual location), `Login_Risk` (excessive failed logins).
-- **Transaction anomalies** — `Largest_Transaction` (unusually large vs. average) and `Highest_Merchart_Risk` (high merchant risk score).
-- **Context-based flags** — `night_vpn` (night-time + VPN use), `location_Risk` (new device + new location combo).
-- **Composite flag** — `Overall_Fraud_Risk`, combining prior fraud, failed logins, new device/location, and night+VPN activity into a single high-confidence signal.
-- **Time features** — `transaction_hour`, `day_of_week`, `is_weekend`, and `is_night` are (re)derived from `transaction_time`.
+categorical_column = [
+    "payment_method",
+    "merchant_category",
+    "city",
+    "country",
+    "device_type",
+    "browser",
+    "previous_fraud_count",
+    "failed_login_attempts",
+    "daily_transaction_count",
+    "is_weekend",
+    "is_night",
+    "vpn_used",
+    "new_device",
+    "new_location",
+    "chargeback_history",
+    "is_fraud",
+]
 
-## 🔄 Preprocessing
+Numerical_column = [
+    "transaction_amount",
+    "account_age_days",
+    "weekly_transaction_amount",
+    "avg_transaction_amount",
+    "merchant_risk_score",
+    "customer_credit_score",
+    "location_distance_km",
+]
 
-- One-hot encoding (`drop_first=True`) on `city`, `country`, `device_type`, `browser`, `payment_method`, `merchant_category`.
-- Binary mapping of `chargeback_history` (`Yes`/`No` → `1`/`0`).
-- `StandardScaler` applied to features after train/test split (80/20, `random_state=42`).
-- Identifier columns dropped prior to modeling to avoid leakage.
+# for col in categorical_column:
+#     plt.figure(figsize=(10, 5))
+#     sns.countplot(x=col, data=data)
+#     sns.barplot(x=col, y='is_fraud', data=data)
+#     plt.title(f'Countplot of {col}')
+#     plt.show()
 
-## 🤖 Models
+# for col in Numerical_column:
+#     plt.figure(figsize=(10, 5))
+#     sns.histplot(data[col],kde=True)
+#     plt.title(f'Histogram of {col}')
+#     plt.show()
 
-| Model | Tuning |
-|---|---|
-| Random Forest Classifier | `GridSearchCV` over `n_estimators`: [50, 100, 200], 5-fold CV |
-| K-Nearest Neighbors | `GridSearchCV` over `n_neighbors`: [3, 5, 7], 5-fold CV |
 
-XGBoost and linear-kernel SVC were evaluated during exploration (see commented-out code) but Random Forest was carried forward as the primary model.
+# -- Feature Engineering --
+data["Monthly_Transaction_Amount"] = data["weekly_transaction_amount"] * 4
+data["Monthly_Transaction_Amount_average"] = data["avg_transaction_amount"] * 4
 
-## 📊 Evaluation
+data["Amount_Derivation"] = (
+    data["Monthly_Transaction_Amount"] / data["Monthly_Transaction_Amount_average"]
+)
 
-The following are computed for the Random Forest model on the held-out test set:
+data["Highest_Red_Flag"] = (
+    data["Amount_Derivation"] > 3 * data["avg_transaction_amount"]
+).astype(int)
 
-- Accuracy, Precision, Recall, F1 Score
-- Full `classification_report`
-- Confusion matrix
-- Top-15 feature importances (visualized as a bar plot)
+data["Risk_Score"] = data["previous_fraud_count"] * data["failed_login_attempts"]
 
-> Run `main.py` (or the notebook) to populate actual metric values and plots — this README doesn't hardcode results since they depend on the dataset instance and random seed used at run time.
+data["Location_Risk"] = (data["previous_fraud_count"] * 2) + data[
+    "location_distance_km"
+]
 
-## 📦 Outputs
+data["Largest_Transaction"] = (
+    data["transaction_amount"] > 2 * data["avg_transaction_amount"]
+).astype(int)
 
-Trained artifacts are serialized with `joblib`:
+data["Highest_Merchart_Risk"] = (data["merchant_risk_score"] >= 8).astype(int)
 
-- `model_1.pkl` — trained Random Forest model
-- `scaler_1.pkl` — fitted `StandardScaler`
-- `features_1.pkl` — final feature column order (needed to align new data at inference time)
+data["Login_Risk"] = (data["failed_login_attempts"] > 3).astype(int)
 
-## 🧰 Requirements
+data["night_vpn"] = ((data["is_night"] == 1) & (data["vpn_used"] == 1)).astype(int)
 
-```
-pandas
-numpy
-matplotlib
-seaborn
-scikit-learn
-xgboost
-joblib
-openpyxl   # for reading .xlsx
-```
+data["location_Risk"] = (
+    (data["new_device"] == 1) & (data["new_location"] == 1)
+).astype(int)
 
-Install with:
+data["Overall_Fraud_Risk"] = (
+    (data["previous_fraud_count"] > 0)
+    & (data["failed_login_attempts"] > 0)
+    & (data["new_device"] == 1)
+    & (data["new_location"] == 1)
+    & (data["night_vpn"] == 1)
+).astype(int)
 
-```bash
-pip install pandas numpy matplotlib seaborn scikit-learn xgboost joblib openpyxl
-```
+# -- Data Preprocessing --
+# one hot Encoding for binary categorical columns
 
-## 🚀 Usage
 
-1. Place `FinPay_Fraud_Dataset.xlsx` in the project directory (update the file path in the script to match your environment).
-2. Run the script:
-   ```bash
-   python main.py
-   ```
-3. Trained model, scaler, and feature list are saved to the project root as `.pkl` files for reuse in inference.
+# -- Data Preprocessing --
 
-## 📁 Suggested Project Structure
+# 1. Correctly create dummy columns for multi-category features
+dummy_columns = [
+    "city",
+    "country",
+    "device_type",
+    "browser",
+    "payment_method",
+    "merchant_category",
+]
+data = pd.get_dummies(data, columns=dummy_columns, drop_first=True)
 
-```
-finpay-fraud-detection/
-├── data/
-│   └── FinPay_Fraud_Dataset.xlsx
-├── main.py
-├── model_1.pkl
-├── scaler_1.pkl
-├── features_1.pkl
-├── requirements.txt
-└── README.md
-```
+# 2. Fix spelling of chargeback history (it is 'chargeback_history' in your dataset profile)
+data["chargeback_history"] = (
+    data["chargeback_history"].map({"No": 0, "Yes": 1}).fillna(0).astype(int)
+)
 
-## 🔮 Next Steps
+# 3. Features already binary (0 or 1) do not need get_dummies
+data["new_device"] = data["new_device"].astype(int)
+data["new_location"] = data["new_location"].astype(int)
 
-- Handle class imbalance explicitly (e.g., `class_weight='balanced'`, SMOTE) if fraud cases are rare.
-- Compare Random Forest against the tuned XGBoost/SVC variants on a common metric like ROC-AUC.
-- Add an inference script that loads the saved `.pkl` artifacts and scores new transactions.
+
+# 🔠 Categorical Columns: ['payment_method', 'merchant_category', 'city', 'country', 'device_type', 'browser', 'previous_fraud_count', 'failed_login_attempts', 'daily_transaction_count', 'is_weekend', 'is_night', 'vpn_used', 'new_device', 'new_location', 'chargeback_history', 'is_fraud']
+
+# -- model selection --
+drop_columns = ["transaction_id", "customer_id", "merchant_id"]
+data = data.drop(columns=drop_columns)
+
+data["transaction_time"] = pd.to_datetime(data["transaction_time"])
+data["transaction_hour"] = data["transaction_time"].dt.hour
+data["day_of_week"] = data["transaction_time"].dt.dayofweek
+data["is_weekend"] = (data["day_of_week"] >= 5).astype(int)
+
+data["is_night"] = (
+    (data["transaction_hour"] >= 22) | (data["transaction_hour"] <= 5)
+).astype(int)
+
+# -- model selection --
+
+X = data.drop(columns=["is_fraud", "transaction_time"])
+y = data["is_fraud"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# model_xgb = xgb.XGBClassifier(n_estimators=100, random_state=42)
+# model_xgb.fit(X_train, y_train)
+# y_pred = model_xgb.predict(X_test)
+
+# print("Model Accuracy:", model_xgb.score(X_test, y_test))
+
+# model_svc = SVC(kernel='linear', random_state=42)
+# model_svc.fit(X_train, y_train)
+
+# y_pred_svc = model_svc.predict(X_test)
+# print("SVC Model Accuracy:", model_svc.score(X_test, y_test))
+
+# -- model tunning  & ensemble learning--
+
+model_rf = RandomForestClassifier(n_estimators=100, random_state=42)
+model_rf.fit(X_train, y_train)
+y_pred_rf = model_rf.predict(X_test)
+print("Random Forest Model Accuracy:", model_rf.score(X_test, y_test))
+
+# Perform cross-validation
+
+Classifier = GridSearchCV(
+    (model_rf),
+    param_grid={"n_estimators": [50, 100, 200]},
+    cv=5,
+    return_train_score=True,
+    scoring="accuracy",
+)
+
+Classifier.fit(X_train, y_train)
+results = pd.DataFrame(Classifier.cv_results_)
+print(results[["param_n_estimators", "mean_test_score", "std_test_score"]])
+
+model_knn = KNeighborsClassifier(n_neighbors=5)
+model_knn.fit(X_train, y_train)
+y_pred_knn = model_knn.predict(X_test)
+
+print("KNN Model Accuracy:", model_knn.score(X_test, y_test))
+
+Classifier_knn = GridSearchCV(
+    (model_knn),
+    param_grid={"n_neighbors": [3, 5, 7]},
+    cv=5,
+    return_train_score=True,
+    scoring="accuracy",
+)
+
+Classifier_knn.fit(X_train, y_train)
+results_knn = pd.DataFrame(Classifier_knn.cv_results_)
+print(results_knn[["param_n_neighbors", "mean_test_score", "std_test_score"]])
+
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Check Random Forest real performance
+print("--- Random Forest Detailed Report ---")
+print(classification_report(y_test, y_pred_rf))
+
+# Print the Confusion Matrix to see exactly what was missed
+print("--- Confusion Matrix ---")
+print(confusion_matrix(y_test, y_pred_rf))
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+
+print("Model Evaluation")
+
+print("Accuracy :", accuracy_score(y_test, y_pred_rf))
+print("Precision:", precision_score(y_test, y_pred_rf))
+print("Recall   :", recall_score(y_test, y_pred_rf))
+print("F1 Score :", f1_score(y_test, y_pred_rf))
+
+print("\nClassification Report")
+print(classification_report(y_test, y_pred_rf))
+
+print("\nConfusion Matrix")
+print(confusion_matrix(y_test, y_pred_rf))
+
+feature_importance = pd.DataFrame(
+    {"Feature": X.columns, "Importance": model_rf.feature_importances_}
+)
+
+feature_importance = feature_importance.sort_values(by="Importance", ascending=False)
+
+print(feature_importance.head(20))
+
+plt.figure(figsize=(10, 8))
+
+sns.barplot(data=feature_importance.head(15), x="Importance", y="Feature")
+
+plt.title("Top 15 Important Features")
+plt.show()
+
+joblib.dump(X.columns.tolist(), "features_1.pkl")
+joblib.dump(model_rf, "model_1.pkl")
+joblib.dump(scaler, "scaler_1.pkl")
+# joblib.dump(X.columns.tolist(), "features_1.pkl")
