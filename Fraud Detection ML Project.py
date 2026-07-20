@@ -19,7 +19,7 @@ import sheryanalysis as sh
 
 # from sklearn.preprocessing import standardscaler
 
-data = pd.read_excel(r"c:\Users\Haris_hp\Downloads\FinPay_Fraud_Dataset.xlsx")
+data = pd.read_excel(r"[Enter your path]")
 print(data.head())
 # print(data.info())
 # print(data.describe())
@@ -73,18 +73,20 @@ Numerical_column = [
     "location_distance_km",
 ]
 
-# for col in categorical_column:
-#     plt.figure(figsize=(10, 5))
-#     sns.countplot(x=col, data=data)
-#     sns.barplot(x=col, y='is_fraud', data=data)
-#     plt.title(f'Countplot of {col}')
-#     plt.show()
 
-# for col in Numerical_column:
-#     plt.figure(figsize=(10, 5))
-#     sns.histplot(data[col],kde=True)
-#     plt.title(f'Histogram of {col}')
-#     plt.show()
+# --- Data visualization ----
+for col in categorical_column:
+    plt.figure(figsize=(10, 5))
+    sns.countplot(x=col, data=data)
+    sns.barplot(x=col, y='is_fraud', data=data)
+    plt.title(f'Countplot of {col}')
+    plt.show()
+
+for col in Numerical_column:
+    plt.figure(figsize=(10, 5))
+    sns.histplot(data[col],kde=True)
+    plt.title(f'Histogram of {col}')
+    plt.show()
 
 
 # -- Feature Engineering --
@@ -154,7 +156,9 @@ data["new_device"] = data["new_device"].astype(int)
 data["new_location"] = data["new_location"].astype(int)
 
 
-# 🔠 Categorical Columns: ['payment_method', 'merchant_category', 'city', 'country', 'device_type', 'browser', 'previous_fraud_count', 'failed_login_attempts', 'daily_transaction_count', 'is_weekend', 'is_night', 'vpn_used', 'new_device', 'new_location', 'chargeback_history', 'is_fraud']
+# 🔠 Categorical Columns: ['payment_method', 'merchant_category', 'city', 'country', 'device_type', 
+# 'browser', 'previous_fraud_count', 'failed_login_attempts', 'daily_transaction_count', 'is_weekend', 'is_night', 
+# 'vpn_used', 'new_device', 'new_location', 'chargeback_history', 'is_fraud']
 
 # -- model selection --
 drop_columns = ["transaction_id", "customer_id", "merchant_id"]
